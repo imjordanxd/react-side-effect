@@ -9,7 +9,7 @@
     "prepare": "npm test && npm run clean && npm run build",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "babel-node ./node_modules/.bin/isparta cover ./node_modules/.bin/_mocha"
+    "test:cov": "jest --collectCoverage"
   },
   "repository": {
     "type": "git",
@@ -41,13 +41,11 @@
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
-    "@babel/register": "^7.5.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.1.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "global-jsdom": "^25.0.0",
     "gzip-size": "^4.1.0",
-    "isparta": "^4.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jsdom": "^25.0.1",
