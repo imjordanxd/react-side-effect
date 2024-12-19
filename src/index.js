@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import * as React from 'react';
 
 const canUseDOM = !!(
   typeof window !== 'undefined' &&
@@ -45,7 +45,7 @@ export default function withSideEffect(
       }
     }
 
-    class SideEffect extends PureComponent {
+    class SideEffect extends React.PureComponent {
       // Try to use displayName of wrapped component
       static displayName = `SideEffect(${getDisplayName(WrappedComponent)})`;
 

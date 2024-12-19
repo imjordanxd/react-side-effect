@@ -1,15 +1,15 @@
-const { expect } = require('chai');
-const React = require('react');
-const createReactClass = require('create-react-class');
-const jsdom = require('jsdom');
-const enzyme = require('enzyme');
-const Adapter = require('enzyme-adapter-react-16');
-const { renderToStaticMarkup } = require('react-dom/server')
-const { render } = require('react-dom')
+import * as React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { render as baseRtlRender } from '@testing-library/react';
 
-const withSideEffect = require('../src');
+const rtlRender = (c, o) => {
+  return baseRtlRender(c, {
+    ...o,
+    legacyRoot: false,
+  })
+}
 
-enzyme.configure({ adapter: new Adapter() });
+import withSideEffect from '../src';
 
 function noop() { }
 const identity = x => x
@@ -17,19 +17,19 @@ const identity = x => x
 describe('react-side-effect', () => {
   describe('argument validation', () => {
     it('should throw if no reducePropsState function is provided', () => {
-      expect(withSideEffect).to.throw('Expected reducePropsToState to be a function.');
+      expect(withSideEffect).toThrow('Expected reducePropsToState to be a function.');
     });
 
     it('should throw if no handleStateChangeOnClient function is provided', () => {
-      expect(withSideEffect.bind(null, noop)).to.throw('Expected handleStateChangeOnClient to be a function.');
+      expect(withSideEffect.bind(null, noop)).toThrow('Expected handleStateChangeOnClient to be a function.');
     });
 
     it('should throw if mapStateOnServer is defined but not a function', () => {
-      expect(withSideEffect.bind(null, noop, noop, 'foo')).to.throw('Expected mapStateOnServer to either be undefined or a function.');
+      expect(withSideEffect.bind(null, noop, noop, 'foo')).toThrow('Expected mapStateOnServer to either be undefined or a function.');
     });
 
     it('should throw if no WrappedComponent is provided', () => {
-      expect(withSideEffect(noop, noop)).to.throw('Expected WrappedComponent to be a React component');
+      expect(withSideEffect(noop, noop)).toThrow('Expected WrappedComponent to be a React component');
     });
   });
 
@@ -37,20 +37,20 @@ describe('react-side-effect', () => {
     const withNoopSideEffect = withSideEffect(noop, noop);
 
     it('should wrap the displayName of wrapped createClass component', () => {
-      const DummyComponent = createReactClass({displayName: 'Dummy', render: noop});
-      const SideEffect = withNoopSideEffect(DummyComponent);
+      class Dummy extends React.Component { };
+      const SideEffect = withNoopSideEffect(Dummy);
 
-      expect(SideEffect.displayName).to.equal('SideEffect(Dummy)');
+      expect(SideEffect.displayName).toBe('SideEffect(Dummy)');
     });
 
     it('should wrap the displayName of wrapped ES2015 class component', () => {
-      class DummyComponent extends React.Component {
+      class Dummy extends React.Component {
         static displayName = 'Dummy'
         render() {}
       }
-      const SideEffect = withNoopSideEffect(DummyComponent);
+      const SideEffect = withNoopSideEffect(Dummy);
 
-      expect(SideEffect.displayName).to.equal('SideEffect(Dummy)');
+      expect(SideEffect.displayName).toBe('SideEffect(Dummy)');
     });
 
     it('should use the constructor name of the wrapped functional component', () => {
@@ -58,14 +58,13 @@ describe('react-side-effect', () => {
 
       const SideEffect = withNoopSideEffect(DummyComponent);
 
-      expect(SideEffect.displayName).to.equal('SideEffect(DummyComponent)');
+      expect(SideEffect.displayName).toBe('SideEffect(DummyComponent)');
     });
 
     it('should fallback to "Component"', () => {
-      const DummyComponent = createReactClass({displayName: null, render: noop});
-      const SideEffect = withNoopSideEffect(DummyComponent);
+      const SideEffect = withNoopSideEffect(class extends React.Component { });
 
-      expect(SideEffect.displayName).to.equal('SideEffect(Component)');
+      expect(SideEffect.displayName).toBe('SideEffect(Component)');
     });
   });
 
@@ -84,42 +83,44 @@ describe('react-side-effect', () => {
     });
 
     it('should expose the canUseDOM flag', () => {
-      expect(SideEffect).to.have.property('canUseDOM');
+      expect(SideEffect).toHaveProperty('canUseDOM');
     });
 
     describe('rewind', () => {
       it('should throw if used in the browser', () => {
         SideEffect.canUseDOM = true;
-        expect(SideEffect.rewind).to.throw('You may only call rewind() on the server. Call peek() to read the current state.');
+        expect(SideEffect.rewind).toThrow('You may only call rewind() on the server. Call peek() to read the current state.');
       });
 
       it('should return the current state', () => {
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        SideEffect.canUseDOM = false;
+        rtlRender(<SideEffect foo="bar"/>);
         const state = SideEffect.rewind();
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).toEqual([{ foo: 'bar' }]);
       });
 
       it('should reset the state', () => {
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        SideEffect.canUseDOM = false;
+        rtlRender(<SideEffect foo="bar"/>);
         SideEffect.rewind();
         const state = SideEffect.rewind();
-        expect(state).to.equal(undefined);
+        expect(state).toBe(undefined);
       });
     });
 
     describe('peek', () => {
       it('should return the current state', () => {
-        enzyme.shallow(<SideEffect foo="bar"/>);
-        expect(SideEffect.peek()).to.deep.equal([{foo: 'bar'}]);
+        rtlRender(<SideEffect foo="bar"/>);
+        expect(SideEffect.peek()).toEqual([{foo: 'bar'}]);
       });
 
       it('should NOT reset the state', () => {
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        rtlRender(<SideEffect foo="bar"/>);
 
         SideEffect.peek();
         const state = SideEffect.peek();
 
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).toEqual([{foo: 'bar'}]);
       });
     });
 
@@ -133,9 +134,9 @@ describe('react-side-effect', () => {
 
         SideEffect.canUseDOM = true;
 
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        rtlRender(<SideEffect foo="bar"/>);
 
-        expect(sideEffectCollectedData).to.deep.equal([{foo: 'bar'}]);
+        expect(sideEffectCollectedData).toEqual([{foo: 'bar'}]);
       });
     });
 
@@ -147,70 +148,40 @@ describe('react-side-effect', () => {
 
         SideEffect.canUseDOM = false;
 
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        rtlRender(<SideEffect foo="bar"/>);
 
         let state = SideEffect.rewind();
 
-        expect(state).not.to.be.an('Array');
-        expect(state).to.deep.equal({foo: 'bar'});
+        expect(state).not.toBeInstanceOf(Array);
+        expect(state).toEqual({foo: 'bar'});
 
         SideEffect.canUseDOM = true;
 
-        enzyme.shallow(<SideEffect foo="bar"/>);
+        rtlRender(<SideEffect foo="bar"/>);
 
         state = SideEffect.peek();
 
-        expect(state).to.an('Array');
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).toBeInstanceOf(Array);
+        expect(state).toEqual([{foo: 'bar'}]);
       });
     });
 
     it('should collect props from all instances', () => {
-      enzyme.shallow(<SideEffect foo="bar"/>);
-      enzyme.shallow(<SideEffect something="different"/>);
+      rtlRender(<SideEffect foo="bar"/>);
+      rtlRender(<SideEffect something="different"/>);
 
       const state = SideEffect.peek();
 
-      expect(state).to.deep.equal([{foo: 'bar'}, {something: 'different'}]);
+      expect(state).toEqual([{foo: 'bar'}, {something: 'different'}]);
     });
 
     it('should render the wrapped component', () => {
       const markup = renderToStaticMarkup(<SideEffect foo="bar"/>);
 
-      expect(markup).to.equal('<div>hello bar</div>');
+      expect(markup).toBe('<div>hello bar</div>');
     });
 
     describe('with DOM', () => {
-      const originalWindow = global.window;
-      const originalDocument = global.document;
-
-      before(done => {
-        jsdom.env('<!doctype html><html><head></head><body></body></html>', (error, window) => {
-          if (!error) {
-            global.window = window;
-            global.document = window.document;
-          }
-
-          done(error);
-        });
-      });
-
-      after(() => {
-        global.window = originalWindow;
-        global.document = originalDocument;
-      });
-
-      it('should be findable by react TestUtils', () => {
-        class AnyComponent extends React.Component {
-          render() {
-            return <SideEffect foo="bar" />
-          }
-        }
-        const wrapper = enzyme.shallow(<AnyComponent />);
-        const sideEffect = wrapper.find(SideEffect)
-        expect(sideEffect.props()).to.deep.equal({ foo: 'bar' });
-      });
-
       it('should only recompute when component updates', () => {
         let collectCount = 0;
 
@@ -222,17 +193,14 @@ describe('react-side-effect', () => {
 
         SideEffect.canUseDOM = true;
 
-        const node = document.createElement('div');
-        document.body.appendChild(node);
-
-        render(<SideEffect text="bar" />, node);
-        expect(collectCount).to.equal(1);
-        render(<SideEffect text="bar" />, node);
-        expect(collectCount).to.equal(1);
-        render(<SideEffect text="baz" />, node);
-        expect(collectCount).to.equal(2);
-        render(<SideEffect text="baz" />, node);
-        expect(collectCount).to.equal(2);
+        const { rerender } = rtlRender(<SideEffect text="bar" />);
+        expect(collectCount).toBe(1);
+        rerender(<SideEffect text="bar" />);
+        expect(collectCount).toBe(1);
+        rerender(<SideEffect text="baz" />);
+        expect(collectCount).toBe(2);
+        rerender(<SideEffect text="baz" />);
+        expect(collectCount).toBe(2);
       });
     });
   });
