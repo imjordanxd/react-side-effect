@@ -7,7 +7,7 @@
     "build": "node scripts/build.js",
     "clean": "rimraf lib",
     "prepare": "npm test && npm run clean && npm run build",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:watch": "jest --watch",
     "test:cov": "jest --collectCoverage"
   },
