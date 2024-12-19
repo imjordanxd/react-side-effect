@@ -9,7 +9,7 @@
     "prepare": "npm test && npm run clean && npm run build",
     "test": "jest --forceExit",
     "test:watch": "jest --watch",
-    "test:cov": "jest --collectCoverage"
+    "test:cov": "npm run test -- --collectCoverage"
   },
   "repository": {
     "type": "git",
