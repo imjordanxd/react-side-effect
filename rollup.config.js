@@ -18,9 +18,6 @@ const config = {
         ['@babel/preset-react', { runtime: 'automatic' }],
         ['@babel/preset-env', { loose: true, modules: false }],
       ],
-      plugins: [
-        '@babel/plugin-proposal-class-properties',
-      ],
       exclude: 'node_modules/**',
     }),
   ],
