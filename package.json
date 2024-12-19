@@ -40,7 +40,7 @@
     "@babel/node": "^7.5.5",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
-    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-react": "^7.26.3",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.1.0",
     "babel-plugin-add-module-exports": "^1.0.2",

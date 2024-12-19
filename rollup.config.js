@@ -15,7 +15,7 @@ const config = {
     babel({
       babelrc: false,
       presets: [
-        '@babel/preset-react',
+        ['@babel/preset-react', { runtime: 'automatic' }],
         ['@babel/preset-env', { loose: true, modules: false }],
       ],
       plugins: [
